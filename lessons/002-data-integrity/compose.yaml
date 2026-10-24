@@ -1,0 +1,30 @@
+name: bd-training-lesson-002
+
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: runtime/python/Dockerfile
+
+    environment:
+      # Урок получает собственные database и login-role в общем PostgreSQL.
+      DATABASE_URL: >-
+        postgresql://lesson_002_app:lesson_002_password@bd-training-postgres:5432/lesson_002
+
+    volumes:
+      # Корень курса нужен и для эталона, и для practice/002-data-integrity.
+      - ../..:/workspace
+
+    working_dir: /workspace
+    # Контейнер хранит готовое Python-окружение. Каждый exec запускает новый
+    # процесс Python, поэтому состояние интерпретатора между попытками не течёт.
+    command: ["sleep", "infinity"]
+    init: true
+    networks:
+      - training
+
+networks:
+  training:
+    external: true
+    name: bd-training-net
+

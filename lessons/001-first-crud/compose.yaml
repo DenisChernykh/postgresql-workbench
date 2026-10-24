@@ -1,0 +1,30 @@
+name: bd-training-lesson-001
+
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: runtime/python/Dockerfile
+
+    environment:
+      # Внутри Docker используется DNS-имя из общей сети, а не localhost.
+      DATABASE_URL: >-
+        postgresql://lesson_001_app:lesson_001_password@bd-training-postgres:5432/lesson_001
+
+    volumes:
+      # Монтируем весь курс: контейнер может запускать и эталон, и перепечатанный
+      # файл из practice/. Изменения на macOS видны сразу, без пересборки.
+      - ../..:/workspace
+
+    working_dir: /workspace
+    # Учебный скрипт быстро завершается, а нам нужен готовый Python-контейнер для
+    # многократных exec, shell и REPL. Поэтому основной процесс только ждёт.
+    command: ["sleep", "infinity"]
+    init: true
+    networks:
+      - training
+
+networks:
+  training:
+    external: true
+    name: bd-training-net

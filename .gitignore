@@ -1,0 +1,13 @@
+.DS_Store
+.env
+.venv/
+__pycache__/
+*.py[cod]
+
+node_modules/
+.pnpm-store/
+.env.local
+.env.production
+.dev.vars
+*.log
+!*.example

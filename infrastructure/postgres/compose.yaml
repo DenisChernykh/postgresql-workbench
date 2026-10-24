@@ -1,0 +1,48 @@
+name: bd-training-infra
+
+services:
+  postgres:
+    # Фиксируем major-версию. Тег bookworm оставляет понятную Linux-базу образа,
+    # а обновления minor-версии PostgreSQL приходят при явном docker compose pull.
+    image: postgres:17-bookworm
+    restart: unless-stopped
+
+    environment:
+      # Это локальная учебная superuser-роль. Примеры к ней не подключаются:
+      # каждому уроку bootstrap.sql создаёт отдельную роль с меньшими правами.
+      POSTGRES_USER: training_admin
+      POSTGRES_PASSWORD: training_admin_password
+      POSTGRES_DB: postgres
+
+    ports:
+      # Порт слушает только localhost и не конфликтует со стандартным 5432.
+      # Из других контейнеров подключаемся к bd-training-postgres:5432.
+      - "127.0.0.1:55432:5432"
+
+    volumes:
+      # Volume не принадлежит конкретному уроку и не удаляется при lesson down.
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U training_admin -d postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 5s
+
+    networks:
+      training:
+        aliases:
+          # Уникальное имя не столкнётся с сервисами `postgres` других проектов.
+          - bd-training-postgres
+
+networks:
+  training:
+    # Стабильное имя позволяет Compose-проектам уроков подключиться как external.
+    name: bd-training-net
+
+volumes:
+  postgres_data:
+    # Явное имя защищает volume от смены имени каталога/Compose-проекта.
+    name: bd-training-postgres-17-data
+
